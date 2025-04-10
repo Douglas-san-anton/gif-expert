@@ -10,9 +10,6 @@ export const Navbar = () => {
                 <Link to="/" className="nav-button">
                     Inicio
                 </Link>
-                <Link to="/favorites" className="nav-button">
-                    Favoritos
-                </Link>
                 <Link to="/my-memes" className="nav-button">
                     Mis Memes
                 </Link>

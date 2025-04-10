@@ -1,27 +1,45 @@
 import { useState } from "react";
-import { AddCategory, GifGrid, MemeEditor, Aside } from "./components";
+import { AddCategory, GifGrid, MemeEditor, Aside, ScrollToTop, Notification } from "./components";
+import { useGifsContext } from "./context/GifsContext";
 
 export const GifExpertApp = () => {
-    const [categories, setCategories] = useState(['Dragon Ball']);
     const [selectedGif, setSelectedGif] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [showNotification, setShowNotification] = useState(false);
+    const { categories, addCategory } = useGifsContext();
 
     const onAddCategory = (newCategory) => {
-        if (categories.includes(newCategory)) return;
-        setCategories([newCategory, ...categories]);
+        addCategory(newCategory);
     }
 
     const onSelectCategory = (category) => {
-        if (!categories.includes(category)) {
-            setCategories([category, ...categories]);
-        }
+        addCategory(category);
     }
 
     const handleSaveMeme = (text) => {
-        if (selectedGif) {
-            selectedGif.onSave(text);
+        // Si recibimos null, solo cerramos el editor sin guardar
+        if (text === null) {
             setSelectedGif(null);
             setIsEditing(false);
+            return;
+        }
+
+        // Si hay texto y un GIF seleccionado, guardamos el meme
+        if (text && selectedGif) {
+            const memeToSave = {
+                id: selectedGif.id,
+                title: selectedGif.title,
+                url: selectedGif.url,
+                memeText: text,
+                date: new Date().toISOString()
+            };
+            
+            const savedMemes = JSON.parse(localStorage.getItem('memes') || '[]');
+            localStorage.setItem('memes', JSON.stringify([...savedMemes, memeToSave]));
+            
+            setSelectedGif(null);
+            setIsEditing(false);
+            setShowNotification(true);
         }
     }
 
@@ -42,12 +60,18 @@ export const GifExpertApp = () => {
                         />
                     ))
                 }
+                <ScrollToTop />
             </div>
             <Aside onSelectCategory={onSelectCategory} />
             <MemeEditor 
                 onSave={handleSaveMeme}
-                initialText={selectedGif?.text || ''}
+                initialText={selectedGif?.memeText || ''}
                 isVisible={isEditing}
+            />
+            <Notification 
+                message="¡Meme creado exitosamente!"
+                isVisible={showNotification}
+                onClose={() => setShowNotification(false)}
             />
         </div>
     )

@@ -4,3 +4,6 @@ export * from './GifItem';
 export * from './Aside';
 export * from './Navbar';
 export * from './MemeEditor';
+export * from './ScrollToTop';
+export * from './Notification';
+export * from './DeleteButton';

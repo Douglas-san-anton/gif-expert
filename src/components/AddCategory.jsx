@@ -1,7 +1,6 @@
 import { useState } from "react"
 
 export const AddCategory = ({onNewCategory}) => {
-
     const [inputValue, setInputValue] = useState('')
 
     const onInputChange = ({target}) => {
@@ -12,6 +11,7 @@ export const AddCategory = ({onNewCategory}) => {
         event.preventDefault();
         if(inputValue.trim().length <= 1) return;
         
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         onNewCategory(inputValue.trim());
         setInputValue('');
     }

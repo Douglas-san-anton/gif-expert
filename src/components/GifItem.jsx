@@ -1,71 +1,64 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { extractDominantColor } from '../helpers/extractDominantColor';
+import { useColor } from '../context/ColorContext';
+import { DeleteButton } from './DeleteButton';
 
-export const GifItem = ({ title, url }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [text, setText] = useState('');
-    const [isFavorite, setIsFavorite] = useState(false);
+export const GifItem = ({ title, url, onSelect, memeText, showDelete, onDelete }) => {
+    const [text, setText] = useState(memeText || '');
+    const [dominantColor, setDominantColor] = useState('rgba(97, 32, 158, 0.7)');
+    const [isRemoving, setIsRemoving] = useState(false);
+    const { setBackgroundColor } = useColor();
 
-    const handleSave = () => {
-        const meme = {
-            title: text || title,
-            url,
-            memeText: text,
-            date: new Date().toISOString()
-        };
+    const processImage = useCallback(async () => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.src = url;
+        const color = await extractDominantColor(img);
+        setDominantColor(color);
+    }, [url]);
 
-        const savedMemes = JSON.parse(localStorage.getItem('memes') || '[]');
-        localStorage.setItem('memes', JSON.stringify([...savedMemes, meme]));
-        setIsEditing(false);
+    useEffect(() => {
+        processImage();
+    }, [processImage]);
+
+    useEffect(() => {
+        setText(memeText || '');
+    }, [memeText]);
+
+    const handleMouseEnter = () => {
+        const bgColor = dominantColor.replace('0.7', '0.3');
+        setBackgroundColor(bgColor);
     };
 
-    const toggleFavorite = () => {
-        setIsFavorite(!isFavorite);
-        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        if (!isFavorite) {
-            localStorage.setItem('favorites', JSON.stringify([...favorites, { title, url }]));
-        } else {
-            const updatedFavorites = favorites.filter(fav => fav.url !== url);
-            localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-        }
+    const handleMouseLeave = () => {
+        setBackgroundColor('var(--off-white)');
+    };
+
+    const handleDelete = (e) => {
+        e.stopPropagation();
+        setIsRemoving(true);
+        setTimeout(() => {
+            onDelete?.();
+        }, 500); // El mismo tiempo que dura la animación
     };
 
     return (
-        <div className="card">
-            <div className="image-container">
-                <img src={url} alt={title} />
+        <div 
+            className={`card ${isRemoving ? 'removing' : ''}`}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            {showDelete && <DeleteButton onClick={handleDelete} title="Eliminar meme" />}
+            <div 
+                className="image-container"
+                onClick={() => onSelect && onSelect()}
+            >
+                <img 
+                    src={url} 
+                    alt={title}
+                />
+                {text && <div className="meme-text">{text}</div>}
             </div>
-            <div className="card-actions">
-                <button 
-                    className={`favorite-button ${isFavorite ? 'active' : ''}`}
-                    onClick={toggleFavorite}
-                >
-                    ❤️
-                </button>
-                <button 
-                    className="edit-button"
-                    onClick={() => setIsEditing(!isEditing)}
-                >
-                    ✏️
-                </button>
-            </div>
-            {isEditing && (
-                <div className="meme-editor">
-                    <input
-                        type="text"
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        placeholder="Escribe tu texto aquí"
-                        className="meme-input"
-                    />
-                    <button 
-                        className="save-button"
-                        onClick={handleSave}
-                    >
-                        Guardar
-                    </button>
-                </div>
-            )}
-            <p>{text || title}</p>
         </div>
     );
 };

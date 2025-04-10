@@ -1,6 +1,7 @@
-export const getGifs = async (category) => {
-
-    const url = `https://api.giphy.com/v1/gifs/search?api_key=iTFVJves3l5b7hAulOucqxnqc7PIcPFQ&q=${category}&limit=12`;
+export const getGifs = async (category, page = 0) => {
+    const limit = 12;
+    const offset = page * limit;
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=iTFVJves3l5b7hAulOucqxnqc7PIcPFQ&q=${category}&limit=${limit}&offset=${offset}`;
     const resp = await fetch(url);
     const { data } = await resp.json();
 
@@ -11,5 +12,4 @@ export const getGifs = async (category) => {
     }));
     
     return gifs;
-
 }
